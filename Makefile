@@ -28,7 +28,8 @@ clean:
 	@rm -rf $(VENV_DIR)
 
 clear_vector_data:
-	@rm -rf $(VECTOR_DATA_DIR)/**
+	@rm -rf $(VECTOR_DATA_DIR)/** \
+	rm vector.yaml
 
 
 HUMIO_INGEST_TOKEN ?= no_specified-humio-token
