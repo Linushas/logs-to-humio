@@ -1,0 +1,5 @@
+console_sink:
+  type: console
+  inputs: ["log_parser"]
+  encoding:
+    codec: "json"

@@ -1,6 +1,6 @@
 import yaml
 from pathlib import Path
-from config import CONFIG_DIR, OUTPUT_YAML
+from config import CONFIG_DIR, OUTPUT_YAML, SINK
 
 class LiteralString(str):
     pass
@@ -52,7 +52,7 @@ def main():
 
     # sinks
     vector_config['transforms'] = transforms
-    vector_config['sinks'] = load_yaml(config_dir / 'sinks.yaml')
+    vector_config['sinks'] = load_yaml(SINK)
 
     output_file = Path(OUTPUT_YAML)
     with open(output_file, 'w') as f:
