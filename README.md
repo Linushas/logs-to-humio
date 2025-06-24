@@ -13,6 +13,7 @@ make run
 ```
 
 ## To Do
+- log_parser.vrl : support empty fields, ex) [event: ]
 - Add data_dir (main.yaml) to make install
 - Timer for merge_multiline transform
 - End of file check?
