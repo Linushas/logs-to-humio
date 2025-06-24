@@ -9,7 +9,7 @@ if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
     }
   }
 
-  structured, err = parse_regex(string!(.message), r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[\[(?P<runtime>[^\]]+)\]\.(?P<worker>[^:]+): \[(?P<app>[^\]]+)\]\.(?P<flow>.+)\.(?P<threadPool>[^\s]+) @(?P<thread>[^\]]+)\] \[event: (?P<event>[^\]]+)\] (?P<class>[^:]+):\s*(?P<msg>.*)$')
+  structured, err = parse_regex(string!(.message), r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[\[(?P<runtime>[^\]]+)\]\.(?P<worker>[^:]+): \[(?P<app>[^\]]+)\]\.(?P<flow>.+)\.(?P<threadPool>[^\s]+) @(?P<thread>[^\]]+)\] \[event:(?P<event>[^\]]+)\] (?P<class>[^:]+):\s*(?P<msg>.*)$')
 
   if err == null && structured != null {
     .loglevel = structured.loglevel
