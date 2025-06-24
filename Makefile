@@ -29,3 +29,13 @@ clean:
 
 clear_vector_data:
 	@rm -rf $(VECTOR_DATA_DIR)/**
+
+
+HUMIO_INGEST_TOKEN ?= no_specified-humio-token
+VECTOR_LOG_PATH ?= no_specified_path
+.PHONY: install
+
+install:
+	@mkdir -p $(CONFIG_DIR)
+	@echo "$(HUMIO_INGEST_TOKEN)" > $(CONFIG_DIR)/humio_ingest_token.txt
+	@echo "$(VECTOR_LOG_PATH)" > $(CONFIG_DIR)/path_to_logs.txt
