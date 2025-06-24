@@ -1,0 +1,4 @@
+check_empty:
+  type: "filter"
+  inputs: ["merge_multiline"]
+  condition: '.message != null && !is_empty(strip_whitespace(string!(.message)))'

@@ -1,0 +1,9 @@
+app_log:
+  type: file
+  include:
+    - "${VECTOR_LOG_PATH}"
+  # exclude:
+  #   - "**/mule_ee.log"
+  read_from: beginning
+  ignore_checkpoints: true
+  oldest_first: true

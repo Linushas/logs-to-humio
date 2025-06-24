@@ -1,0 +1,4 @@
+log_parser:
+  type: "remap"
+  inputs: ["check_empty"]
+  source: ""

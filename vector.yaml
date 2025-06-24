@@ -1,0 +1,74 @@
+data_dir: /home/mule/.vector/logs-to-humio/vector
+sources:
+  app_log:
+    type: file
+    include:
+    - ${VECTOR_LOG_PATH}
+    read_from: beginning
+    ignore_checkpoints: true
+    oldest_first: true
+transforms:
+  merge_multiline:
+    type: lua
+    inputs:
+    - app_log
+    version: '2'
+    source: "state = {\n  pending_event = nil\n}\nstart_pattern = \"^(TRACE|FATAL|INFO|ERROR|WARN|DEBUG)%s\"\
+      \nhooks:\n  process: |\n    function(event, emit)\n      local message = event.log.message\
+      \ or \"\"\n\n      if type(message) ~= \"string\" or message == \"\" then\n\
+      \        return\n      end\n\n      local is_start = string.match(message, start_pattern)\n\
+      \n      if is_start then\n        if state.pending_event then\n          emit(state.pending_event)\n\
+      \        end\n\n        state.pending_event = event\n      else\n        if\
+      \ state.pending_event then\n          state.pending_event.log.message = state.pending_event.log.message\
+      \ .. \"\\n\" .. message\n        end\n      end\n\n      return\n    end\n \
+      \ shutdown: |\n    function(emit)\n      if state.pending_event then\n     \
+      \   emit(state.pending_event)\n      end\n    end"
+  check_empty:
+    type: filter
+    inputs:
+    - merge_multiline
+    condition: .message != null && !is_empty(strip_whitespace(string!(.message)))
+  log_parser:
+    type: remap
+    inputs:
+    - check_empty
+    source: ".tags.parse_regex_error = true\nif exists(.message) && !is_empty(strip_whitespace(string!(.message)))\
+      \ {\n  base, err = parse_regex(.message, r'(?s)^(?P<loglevel>INFO|ERROR|WARN|DEBUG)\\\
+      s+(?P<timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}).*')\n  if\
+      \ err == null {\n    .fallback.loglevel = base.loglevel\n    if base.timestamp\
+      \ != null {\n      parsed_timestamp = parse_timestamp!(base.timestamp, \"%Y-%m-%d\
+      \ %H:%M:%S,%3f\", \"Europe/Stockholm\")\n      .fallback.@timestamp = format_timestamp!(parsed_timestamp,\
+      \ \"%+\")\n    }\n  }\n\n  structured, err = parse_regex(string!(.message),\
+      \ r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\\s+(?P<timestamp>\\\
+      d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3}) \\[\\[(?P<runtime>[^\\]]+)\\\
+      ]\\.(?P<worker>[^:]+): \\[(?P<app>[^\\]]+)\\]\\.(?P<flow>.+)\\.(?P<threadPool>[^\\\
+      s]+) @(?P<thread>[^\\]]+)\\] \\[event: (?P<event>[^\\]]+)\\] (?P<class>[^:]+):\\\
+      s*(?P<msg>.*)$')\n\n  if err == null && structured != null {\n    .loglevel\
+      \ = structured.loglevel\n    if structured.timestamp != null {\n      parsed_timestamp\
+      \ = parse_timestamp!(structured.timestamp, \"%Y-%m-%d %H:%M:%S,%3f\", \"Europe/Stockholm\"\
+      )\n      .@timestamp = format_timestamp!(parsed_timestamp, \"%+\")\n    }\n\
+      \    .runtime = structured.runtime\n    .worker = structured.worker\n    .app\
+      \ = structured.app\n    .flow = structured.flow\n    .threadPool = structured.threadPool\n\
+      \    .thread = structured.thread\n    .event = structured.event\n    .class\
+      \ = structured.class\n    .messageInfo = structured.msg\n    .tags.parse_regex_error\
+      \ = false\n  } else {\n    structured, err = parse_regex(.message, r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\\\
+      s+(?P<timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2},\\d{3})\\s*(?P<msg>.*)$')\n\
+      \    if err == null && structured != null {\n      .loglevel = structured.loglevel\n\
+      \      if structured.timestamp != null {\n        parsed_timestamp = parse_timestamp!(structured.timestamp,\
+      \ \"%Y-%m-%d %H:%M:%S,%3f\", \"Europe/Stockholm\")\n        .@timestamp = format_timestamp!(parsed_timestamp,\
+      \ \"%+\")\n      }\n      .messageInfo = structured.msg\n      .tags.parse_regex_error\
+      \ = true\n    }\n  }\n}\n# .@timestamp = now()"
+sinks:
+  humio_sink:
+    type: humio_logs
+    inputs:
+    - log_parser
+    compression: none
+    endpoint: https://cloud.humio.com
+    event_type: json
+    host_key: .host
+    index: sandbox
+    timestamp_key: .@timestamp
+    token: ${HUMIO_INGEST_TOKEN}
+    encoding:
+      codec: json

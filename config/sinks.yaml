@@ -1,0 +1,12 @@
+humio_sink:
+  type: humio_logs
+  inputs: ["log_parser"]
+  compression: none
+  endpoint: https://cloud.humio.com
+  event_type: json
+  host_key: .host
+  index: "sandbox"
+  timestamp_key: .@timestamp
+  token: "${HUMIO_INGEST_TOKEN}"
+  encoding:
+    codec: "json"
