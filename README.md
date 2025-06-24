@@ -13,5 +13,6 @@ make run
 ```
 
 ## To Do
+- Add data_dir (main.yaml) to make install
 - Timer for merge_multiline transform
 - End of file check?
