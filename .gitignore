@@ -5,3 +5,5 @@ __pycache__/**
 humio_ingest_token.txt
 path_to_logs.txt
 vector.yaml
+vector_data/**
+logs/**

@@ -1,5 +1,9 @@
-merge_multiline:
-  type: "lua"
-  inputs: ["app_log"]
-  version: "2"
-  source: ""
+  merge_multiline:
+    type: lua
+    inputs:
+    - app_log
+    version: '2'
+    source: |
+    hooks:
+      process: |
+      shutdown: |
