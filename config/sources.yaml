@@ -5,5 +5,5 @@ app_log:
   exclude:
     - "**/mule_ee.log"
   read_from: beginning
-  ignore_checkpoints: true
-  oldest_first: true
+  # ignore_checkpoints: true
+  # oldest_first: true

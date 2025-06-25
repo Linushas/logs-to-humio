@@ -28,12 +28,12 @@ def main():
     transforms = {}
 
     # Merge multiline transform
-    merge_multiline_config = load_yaml(transforms_dir / 'merge_multiline.yaml')
-    merge_multiline_source = read_file(transforms_dir / 'merge_multiline_source.lua')
+    merge_multiline_config = load_yaml(transforms_dir / 'merge_multiline/merge_multiline.yaml')
+    merge_multiline_source = read_file(transforms_dir / 'merge_multiline/merge_multiline_source.lua')
     merge_multiline_config['merge_multiline']['source'] = LiteralString(merge_multiline_source)
-    merge_multiline_process = read_file(transforms_dir / 'merge_multiline_process.lua')
+    merge_multiline_process = read_file(transforms_dir / 'merge_multiline/merge_multiline_process.lua')
     merge_multiline_config['merge_multiline']['hooks']['process'] = LiteralString(merge_multiline_process)
-    merge_multiline_shutdown = read_file(transforms_dir / 'merge_multiline_shutdown.lua')
+    merge_multiline_shutdown = read_file(transforms_dir / 'merge_multiline/merge_multiline_shutdown.lua')
     merge_multiline_config['merge_multiline']['hooks']['shutdown'] = LiteralString(merge_multiline_shutdown)
     transforms.update(merge_multiline_config)
 
