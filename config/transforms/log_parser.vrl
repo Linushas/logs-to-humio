@@ -1,4 +1,5 @@
 .tags.parse_regex_error = true
+.vector_read_timestamp = now()
 if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
   base, err = parse_regex(.message, r'(?s)^(?P<loglevel>INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}).*')
   if err == null {
@@ -40,4 +41,3 @@ if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
     }
   }
 }
-# .@timestamp = now()

@@ -1,6 +1,7 @@
 import yaml
 from pathlib import Path
-from config import CONFIG_DIR, OUTPUT_YAML, SINK
+import os
+from config import CONFIG_DIR, OUTPUT_YAML, SINK, IGNORE_CHECKPOINTS
 
 class LiteralString(str):
     pass
@@ -20,10 +21,17 @@ def read_file(path:str):
 
 def main():
     config_dir = Path(CONFIG_DIR)
+    data_dir = os.path.abspath("../vector_data")
     vector_config = load_yaml(config_dir / 'main.yaml')
+    vector_config['data_dir'] = data_dir
 
     # sources
     vector_config['sources'] = load_yaml(config_dir / 'sources.yaml')
+    if IGNORE_CHECKPOINTS:
+        vector_config['sources']['app_log']['ignore_checkpoints'] = True
+        vector_config['sources']['app_log']['oldest_first'] = True
+    
+
     transforms_dir = config_dir / 'transforms'
     transforms = {}
 

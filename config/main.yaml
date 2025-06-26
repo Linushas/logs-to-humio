@@ -1,2 +1,1 @@
-# data_dir: /Users/linus.hasselkvist@schibsted.com/logs_to_humio/vector_data
-data_dir: /home/mule/.vector/logs-to-humio/vector
+data_dir: 
