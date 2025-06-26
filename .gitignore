@@ -6,5 +6,6 @@ humio_ingest_token.txt
 path_to_logs.txt
 vector.yaml
 vector_data/**
+!vector_data/.gitkeep
 logs/**
 vector.yaml
