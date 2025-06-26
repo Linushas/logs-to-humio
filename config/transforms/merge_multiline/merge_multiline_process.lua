@@ -9,7 +9,7 @@ function(event, emit)
 
   local is_start = false
   local start_patterns = {"^ERROR%s+", "^INFO%s+", "^WARN%s+", "^DEBUG%s+", "^TRACE%s+", "^FATAL%s+"}
-  for i = 0, #start_patterns do
+  for i = 1, #start_patterns do
     if string.match(message, start_patterns[i]) then
       is_start = true
       break

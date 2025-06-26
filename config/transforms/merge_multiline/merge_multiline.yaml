@@ -1,9 +1,14 @@
   merge_multiline:
     type: lua
     inputs:
-    - app_log
+      - app_log
     version: '2'
+    # search_dirs:
+    #   - /etc/vector/lua
     source: |
     hooks:
       process: |
       shutdown: |
+    timers:
+      - handler: timer_handler
+        interval_seconds: 5

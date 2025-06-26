@@ -16,7 +16,3 @@ make venv; make assemble
 ```bash
 make run
 ```
-
-## To Do
-- Timer for merge_multiline transform
-- End of file check?
