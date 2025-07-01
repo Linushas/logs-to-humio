@@ -1,15 +1,6 @@
 .tags.parse_regex_error = true
 .vector_read_timestamp = now()
 if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
-  base, err = parse_regex(.message, r'(?s)^(?P<loglevel>INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}).*')
-  if err == null {
-    .fallback.loglevel = base.loglevel
-    if base.timestamp != null {
-      parsed_timestamp = parse_timestamp!(base.timestamp, "%Y-%m-%d %H:%M:%S,%3f", "Europe/Stockholm")
-      .fallback.@timestamp = format_timestamp!(parsed_timestamp, "%+")
-    }
-  }
-
   structured, err = parse_regex(string!(.message), r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[\[(?P<runtime>[^\]]+)\]\.(?P<worker>[^:]+): \[(?P<app>[^\]]+)\]\.(?P<flow>.+)\.(?P<threadPool>[^\s]+) @(?P<thread>[^\]]+)\] \[event:(?P<event>[^\]]+)\] (?P<class>[^:]+):\s*(?P<msg>.*)$')
 
   if err == null && structured != null {
@@ -18,7 +9,6 @@ if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
       parsed_timestamp = parse_timestamp!(structured.timestamp, "%Y-%m-%d %H:%M:%S,%3f", "Europe/Stockholm")
       .@timestamp = format_timestamp!(parsed_timestamp, "%+")
     }
-    .runtime = structured.runtime
     .worker = structured.worker
     .app = structured.app
     .flow = structured.flow
@@ -41,3 +31,5 @@ if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
     }
   }
 }
+
+del(.source_type)
