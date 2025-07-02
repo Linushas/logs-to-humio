@@ -27,11 +27,9 @@ def main():
 
     # sources
     vector_config['sources'] = load_yaml(config_dir / 'sources.yaml')
-    if IGNORE_CHECKPOINTS:
-        vector_config['sources']['app_log']['ignore_checkpoints'] = True
-        vector_config['sources']['app_log']['oldest_first'] = True
+    vector_config['sources']['app_log']['ignore_checkpoints'] = IGNORE_CHECKPOINTS
+    vector_config['sources']['app_log']['oldest_first'] = True
     
-
     transforms_dir = config_dir / 'transforms'
     transforms = {}
 
