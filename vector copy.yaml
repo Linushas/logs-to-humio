@@ -1,0 +1,133 @@
+data_dir: /home/mule/logs-to-humio/vector_data
+sources:
+  app_log:
+    type: file
+    include:
+    - ${VECTOR_LOG_PATH}
+    exclude:
+    - '**/mule_ee.log'
+    read_from: beginning
+    ignore_checkpoints: true
+    oldest_first: true
+transforms:
+  merge_multiline:
+    type: lua
+    inputs:
+    - app_log
+    version: '2'
+    source: |-
+      state = {
+        pending_event = nil
+      }
+
+      function timer_handler(emit)
+        if state.pending_event then
+          emit(state.pending_event)
+        end
+
+        state.pending_event = nil
+        counter = 0
+      end
+    hooks:
+      process: |-
+        function(event, emit)
+          local message = event.log.message or ""
+
+          if type(message) ~= "string" or message == "" then
+            return
+          end
+
+          -- print("Processing line: [" .. message .. "]")
+
+          local is_start = false
+          local start_patterns = {"^ERROR%s+", "^INFO%s+", "^WARN%s+", "^DEBUG%s+", "^TRACE%s+", "^FATAL%s+"}
+          for i = 1, #start_patterns do
+            if string.match(message, start_patterns[i]) then
+              is_start = true
+              break
+            end
+          end
+
+          if is_start then
+            if state.pending_event then
+              emit(state.pending_event)
+            end
+
+            state.pending_event = event
+          else
+            if state.pending_event then
+              state.pending_event.log.message = state.pending_event.log.message .. "\n" .. message
+            end
+          end
+
+          return
+        end
+      shutdown: |-
+        function(emit)
+          if state.pending_event then
+            emit(state.pending_event)
+          end
+        end
+    timers:
+    - handler: timer_handler
+      interval_seconds: 5
+  check_empty:
+    type: filter
+    inputs:
+    - merge_multiline
+    condition: .message != null && !is_empty(strip_whitespace(string!(.message)))
+  log_parser:
+    type: remap
+    inputs:
+    - check_empty
+    source: |-
+      .tags.parse_regex_error = true
+      .vector_read_timestamp = now()
+      if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
+        structured, err = parse_regex(string!(.message), r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3}) \[\[(?P<runtime>[^\]]+)\]\.(?P<worker>[^:]+): \[(?P<app>[^\]]+)\]\.(?P<flow>.+)\.(?P<threadPool>[^\s]+) @(?P<thread>[^\]]+)\] \[event:(?P<event>[^\]]+)\] (?P<class>[^:]+):\s*(?P<msg>.*)$')
+
+        if err == null && structured != null {
+          .loglevel = structured.loglevel
+          if structured.timestamp != null {
+            parsed_timestamp = parse_timestamp!(structured.timestamp, "%Y-%m-%d %H:%M:%S,%3f", "Europe/Stockholm")
+            .@timestamp = format_timestamp!(parsed_timestamp, "%+")
+          }
+          .worker = structured.worker
+          .app = structured.app
+          .flow = structured.flow
+          .threadPool = structured.threadPool
+          .thread = structured.thread
+          .event = structured.event
+          .class = structured.class
+          .messageInfo = structured.msg
+          .tags.parse_regex_error = false
+        } else {
+          structured, err = parse_regex(.message, r'(?s)^(?P<loglevel>TRACE|FATAL|INFO|ERROR|WARN|DEBUG)\s+(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\s*(?P<msg>.*)$')
+          if err == null && structured != null {
+            .loglevel = structured.loglevel
+            if structured.timestamp != null {
+              parsed_timestamp = parse_timestamp!(structured.timestamp, "%Y-%m-%d %H:%M:%S,%3f", "Europe/Stockholm")
+              .@timestamp = format_timestamp!(parsed_timestamp, "%+")
+            }
+            .messageInfo = structured.msg
+            .tags.parse_regex_error = true
+          }
+        }
+      }
+
+      del(.source_type)
+sinks:
+  humio_sink:
+    type: humio_logs
+    inputs:
+    - log_parser
+    compression: none
+    endpoint: https://schibsted.ingest.logscale.eu-1.crowdstrike.com
+    event_type: json
+    host_key: .host
+    index: "io_schibsted_icc_mule_pre"
+    timestamp_key: .@timestamp
+    token: ${HUMIO_INGEST_TOKEN}
+    encoding:
+      codec: json
+

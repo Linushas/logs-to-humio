@@ -3,7 +3,7 @@ OUTPUT_YAML = "../vector.yaml"
 CONSOLE_SINK = CONFIG_DIR+"/console_sink.yaml"
 HUMIO_SINK = CONFIG_DIR+"/sinks.yaml"
 
-DEBUG = False
+DEBUG = True
 
 SINK = CONSOLE_SINK if DEBUG else HUMIO_SINK
 IGNORE_CHECKPOINTS = DEBUG

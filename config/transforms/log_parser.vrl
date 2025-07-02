@@ -32,4 +32,9 @@ if exists(.message) && !is_empty(strip_whitespace(string!(.message))) {
   }
 }
 
+if .app == null {
+    structured, err = parse_regex(string!(.file), r'(?s).*/(?P<app>[^/.]+)\.[^.]+$')
+    .app = structured.app
+}
+
 del(.source_type)
